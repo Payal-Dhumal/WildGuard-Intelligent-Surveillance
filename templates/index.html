@@ -1,0 +1,2159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WildGuard AI – Wildlife Detection & Intelligent Alert System</title>
+  
+  <!-- Plus Jakarta Sans Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Marked.js & DOMPurify for Markdown Rendering and XSS Sanitization -->
+  <script src="/static/js/marked.min.js"></script>
+  <script src="/static/js/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+
+  <style>
+    :root {
+      --bg-page: #e7ebee;
+      --card-bg: #ffffff;
+      --card-dark: #12161b;
+      --text-main: #18202a;
+      --text-muted: #788597;
+      --border-color: #e5e9ee;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      --accent-blue: #3b82f6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.7) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(220, 230, 240, 0.5) 0px, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      padding: 16px;
+    }
+
+    .app-wrapper {
+      display: flex;
+      width: 100%;
+      height: calc(100vh - 32px);
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    /* ================= SIDEBAR ================= */
+    .sidebar {
+      width: 220px;
+      background: #ffffff;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .sidebar::before {
+      content: "";
+      position: absolute;
+      bottom: 75px;
+      left: 0;
+      right: 0;
+      height: 160px;
+      background: linear-gradient(to top, rgba(140, 160, 175, 0.35) 0%, rgba(140, 160, 175, 0) 100%),
+                  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400'%3E%3Cpath fill='%23637b8d' fill-opacity='0.25' d='M0,400 L80,220 L160,400 L240,180 L320,400 L400,200 L480,400 L560,160 L640,400 L720,220 L800,400 L880,180 L960,400 L1040,190 L1120,400 L1200,210 L1200,400 Z'/%3E%3Cpath fill='%23455a64' fill-opacity='0.35' d='M0,400 L120,260 L220,400 L340,240 L440,400 L580,230 L700,400 L840,250 L980,400 L1100,270 L1200,400 Z'/%3E%3C/svg%3E") no-repeat bottom center;
+      background-size: cover;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: #111722;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .brand-name {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: #111722;
+    }
+
+    .brand-name span { color: var(--accent-green); }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 2;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .nav-item:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .nav-item.active {
+      background: #111722;
+      color: #ffffff;
+      box-shadow: 0 6px 16px rgba(17, 23, 34, 0.18);
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: #111722;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 12px;
+    }
+
+    .nav-item.active .nav-badge { background: var(--accent-red); }
+
+    .profile-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      z-index: 2;
+      cursor: pointer;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 36px;
+      height: 36px;
+    }
+
+    .avatar-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #dbeafe;
+    }
+
+    .status-dot {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      border: 2px solid #ffffff;
+    }
+
+    .profile-info { display: flex; flex-direction: column; }
+    .profile-name { font-size: 12px; font-weight: 700; color: #0f172a; }
+    .profile-role { font-size: 10px; color: #94a3b8; }
+
+    /* ================= MAIN CONTENT AREA ================= */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    /* TOP HEADER BAR */
+    .top-header {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo { font-size: 24px; }
+    .header-titles h1 { font-size: 18px; font-weight: 800; color: #111722; }
+    .header-titles h1 span { color: var(--accent-green); }
+    .header-titles p { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+    .header-widgets { display: flex; align-items: center; gap: 10px; }
+    .header-pill {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 7px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 7px 14px;
+      gap: 10px;
+      width: 280px;
+    }
+
+    .search-bar input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 12px;
+      color: #1e293b;
+      width: 100%;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      color: #475569;
+    }
+
+    .badge-count {
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 700;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ffffff;
+    }
+
+    /* VIEW SECTIONS (Controlled by Sidebar) */
+    .view-section {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .view-section.active {
+      display: flex;
+    }
+
+    /* GRID FOR DASHBOARD VIEW */
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .column { display: flex; flex-direction: column; gap: 14px; }
+
+    /* CARD STYLES */
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 16px 18px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
+    }
+
+    .card-dark {
+      background: #11161d;
+      color: #f8fafc;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .card-dark .card-title { color: #ffffff; }
+
+    .live-chip {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--accent-green);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .live-chip::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* LIVE CAMERA FEED */
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      height: 290px;
+      background: #000000;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-bg-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .night-chip {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      color: #f8fafc;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .floating-danger-alert {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      background: rgba(185, 28, 28, 0.90);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 14px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #ffffff;
+      box-shadow: 0 10px 25px rgba(185, 28, 28, 0.4);
+      z-index: 5;
+    }
+
+    .alert-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .alert-text-group .alert-head {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .alert-text-group .alert-desc {
+      font-size: 10px;
+      opacity: 0.90;
+    }
+
+    .video-bottom-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding: 0 4px;
+      color: #64748b;
+    }
+
+    /* RECENT SIGHTINGS TABLE */
+    .sightings-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+
+    .sightings-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #1e2633;
+    }
+
+    .sightings-table td {
+      padding: 10px 0;
+      font-size: 11px;
+      color: #e2e8f0;
+      border-bottom: 1px solid #1a202c;
+      vertical-align: middle;
+    }
+
+    .sighting-thumb {
+      width: 44px;
+      height: 30px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #2d3748;
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .pill-high { background: #7f1d1d; color: #fecaca; }
+    .pill-medium { background: #78350f; color: #fde68a; }
+    .pill-low { background: #064e3b; color: #a7f3d0; }
+
+    /* RISK OVERVIEW */
+    .risk-stat-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .stat-badge-green { color: var(--accent-green); font-weight: 700; }
+
+    .chart-container {
+      height: 90px;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    .risk-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .risk-metric-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .box-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .box-icon-red { background: #fee2e2; color: #ef4444; }
+    .box-icon-yellow { background: #fef3c7; color: #f59e0b; }
+    .box-icon-green { background: #d1fae5; color: #10b981; }
+
+    .box-data .num { font-size: 16px; font-weight: 800; color: #0f172a; }
+    .box-data .sub { font-size: 10px; color: #64748b; font-weight: 600; }
+
+    /* CAMERA STATUS */
+    .camera-list { display: flex; flex-direction: column; gap: 8px; }
+    .camera-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .camera-row:hover { background: #f1f5f9; }
+
+    .cam-left { display: flex; align-items: center; gap: 10px; }
+    .cam-thumb { width: 38px; height: 26px; border-radius: 6px; object-fit: cover; }
+    .cam-info .cam-id { font-size: 12px; font-weight: 700; color: #0f172a; }
+    .cam-info .cam-name { font-size: 10px; color: #64748b; }
+
+    .cam-right { display: flex; align-items: center; gap: 14px; }
+    .status-badge { font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .status-online { color: var(--accent-green); }
+    .status-online::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-green); }
+    .status-offline { color: var(--accent-red); }
+    .status-offline::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-red); }
+    .cam-coords { font-size: 10px; color: #94a3b8; }
+
+    /* AI RANGER CHAT */
+    .ai-chat-card { display: flex; flex-direction: column; height: 260px; min-width: 0; }
+    .gemini-pill { font-size: 11px; color: #3b82f6; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 6px 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+    
+    .msg-user {
+      align-self: flex-end;
+      background: #dcfce7;
+      color: #166534;
+      padding: 7px 14px;
+      border-radius: 14px 14px 2px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      max-width: 85%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      box-sizing: border-box;
+    }
+
+    .msg-bot-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      max-width: 100%;
+      min-width: 0;
+      width: 100%;
+    }
+    .bot-sparkle {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: #3b82f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .msg-bot {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 11.5px;
+      color: #1e293b;
+      line-height: 1.55;
+      flex: 1;
+      min-width: 0;
+      max-width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      box-sizing: border-box;
+    }
+
+    /* Markdown Elements inside bot message */
+    .msg-bot p {
+      margin: 0 0 6px 0;
+    }
+    .msg-bot p:last-child {
+      margin-bottom: 0;
+    }
+    .msg-bot ul, .msg-bot ol {
+      margin: 4px 0 6px 18px;
+      padding-left: 0;
+    }
+    .msg-bot li {
+      margin-bottom: 3px;
+      line-height: 1.5;
+    }
+    .msg-bot li:last-child {
+      margin-bottom: 0;
+    }
+    .msg-bot strong, .msg-bot b {
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .msg-bot em, .msg-bot i {
+      font-style: italic;
+      color: #334155;
+    }
+    .msg-bot h1, .msg-bot h2, .msg-bot h3, .msg-bot h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 8px 0 4px 0;
+    }
+    .msg-bot h1:first-child, .msg-bot h2:first-child, .msg-bot h3:first-child, .msg-bot h4:first-child {
+      margin-top: 0;
+    }
+    .msg-bot code {
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10.5px;
+      word-break: break-word;
+    }
+    .msg-bot pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 6px 0;
+      font-size: 10.5px;
+      overflow-x: auto;
+      max-width: 100%;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .msg-bot pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border-radius: 0;
+    }
+    .msg-bot blockquote {
+      border-left: 3px solid #3b82f6;
+      padding: 4px 8px 4px 10px;
+      margin: 6px 0;
+      color: #334155;
+      background: rgba(59, 130, 246, 0.05);
+      border-radius: 0 6px 6px 0;
+      font-size: 11px;
+    }
+    .msg-bot hr {
+      border: 0;
+      height: 1px;
+      background: #e2e8f0;
+      margin: 8px 0;
+    }
+
+    /* Structured Incident Detail Badges */
+    .threat-tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+    .threat-tag-critical {
+      background: rgba(239, 68, 68, 0.14);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+    .threat-tag-high {
+      background: rgba(249, 115, 22, 0.14);
+      color: #ea580c;
+      border: 1px solid rgba(249, 115, 22, 0.35);
+    }
+    .threat-tag-medium {
+      background: rgba(234, 179, 8, 0.14);
+      color: #b45309;
+      border: 1px solid rgba(234, 179, 8, 0.35);
+    }
+    .threat-tag-low {
+      background: rgba(16, 185, 129, 0.14);
+      color: #047857;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .incident-timestamp {
+      font-family: ui-monospace, monospace;
+      font-size: 10px;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      display: inline-block;
+    }
+
+    .chat-input-bar {
+      display: flex;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 4px 6px 4px 14px;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chat-input-bar input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 11px;
+      color: #1e293b;
+    }
+
+    .chat-send-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      background: #111722;
+      color: #ffffff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* FULL PAGE VIEWS STYLES */
+    .full-view-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .section-headline {
+      font-size: 20px;
+      font-weight: 800;
+      color: #111722;
+      margin-bottom: 6px;
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    .alert-card-item {
+      background: #fff5f5;
+      border: 1px solid #fecaca;
+      border-left: 5px solid #ef4444;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      max-width: 450px;
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-wrapper">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+      <div>
+        <div class="brand">
+          <div class="brand-icon">🐾</div>
+          <div class="brand-name">WildGuard <span>AI</span></div>
+        </div>
+
+        <ul class="nav-list">
+          <li class="nav-item active" onclick="switchTab('dashboard')">
+            <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item" onclick="switchTab('live-monitor')">
+            <i data-lucide="video" style="width: 16px; height: 16px;"></i>
+            <span>Live Monitor</span>
+          </li>
+          <li class="nav-item" onclick="switchTab('alerts')">
+            <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
+            <span>Alerts</span>
+            <span class="nav-badge" id="sidebar-alert-badge">{{ high_risk }}</span>
+          </li>
+          <li class="nav-item" onclick="switchTab('sightings')">
+            <i data-lucide="database" style="width: 16px; height: 16px;"></i>
+            <span>Sightings</span>
+          </li>
+          <li class="nav-item" onclick="switchTab('ai-ranger')">
+            <i data-lucide="message-square" style="width: 16px; height: 16px;"></i>
+            <span>AI Ranger</span>
+          </li>
+          <li class="nav-item" onclick="switchTab('settings')">
+            <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
+            <span>Settings</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="profile-card">
+        <div class="avatar-wrap">
+          <img class="avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="User Avatar" />
+          <div class="status-dot"></div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">Payal Dhumal</div>
+          <div class="profile-role">Student / Operator</div>
+        </div>
+        <i data-lucide="chevron-right" style="width: 14px; height: 14px; margin-left: auto; color: #94a3b8;"></i>
+      </div>
+    </aside>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main class="main-content">
+
+      <!-- TOP HEADER BAR -->
+      <header class="top-header">
+        <div class="header-brand">
+          <div class="header-logo">🐾</div>
+          <div class="header-titles">
+            <h1>WildGuard <span>AI</span></h1>
+            <p>Wildlife Detection and Intelligent Alert System</p>
+          </div>
+        </div>
+
+        <div class="header-widgets">
+          <div class="header-pill">
+            <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
+            <span id="live-clock">12 Oct 2026, 02:47:13 AM IST</span>
+          </div>
+
+          <div class="header-pill">
+            <i data-lucide="moon" style="width: 14px; height: 14px;"></i>
+            <span>23° Clear Night</span>
+          </div>
+
+          <div class="search-bar">
+            <i data-lucide="search" style="width: 14px; height: 14px; color: #94a3b8;"></i>
+            <input type="text" placeholder="Search sightings, cameras, locations..." oninput="handleSearch(this.value)" />
+          </div>
+
+          <button class="icon-btn" onclick="switchTab('alerts')">
+            <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
+            <div class="badge-count">{{ high_risk }}</div>
+          </button>
+
+          <button class="icon-btn" onclick="switchTab('ai-ranger')">
+            <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- ================= 1. DASHBOARD VIEW ================= -->
+      <section id="view-dashboard" class="view-section active">
+        <div class="grid-container">
+
+          <!-- LEFT COLUMN -->
+          <div class="column">
+
+            <!-- LIVE CAMERA FEED CARD -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group" style="display: flex; align-items: center; gap: 8px;">
+                  <i data-lucide="video" style="width: 16px; height: 16px; color: #1e293b;"></i>
+                  
+                  <!-- Dynamic Camera Selector Dropdown -->
+                  <select id="active-camera-select" onchange="changeActiveCamera(this.value)" style="border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 700; font-size: 13px; color: #0f172a; padding: 4px 8px; border-radius: 8px; cursor: pointer; outline: none;">
+                    <option value="CAM_01" selected>CAM_01 • Village Boundary (Sector 4)</option>
+                    <option value="CAM_02">CAM_02 • Deep Forest Waterhole (Sector 12)</option>
+                    <option value="CAM_03">CAM_03 • Highway Crossing (Sector 7)</option>
+                  </select>
+
+                  <div class="live-chip">Live</div>
+                </div>
+                <div class="card-meta">
+                  <span id="header-cam-zone">Sector 4 - Buffer Boundary</span>
+                  <i data-lucide="map-pin" style="width: 12px; height: 12px; margin-left: 6px;"></i>
+                  <span id="header-cam-gps">26.0173° N, 92.9376° E</span>
+                  <i data-lucide="maximize-2" style="width: 14px; height: 14px; margin-left: 12px; cursor: pointer;" onclick="switchTab('live-monitor')"></i>
+                </div>
+              </div>
+
+              <!-- Video Viewport Connected to Live Streaming Endpoint -->
+              <div class="video-viewport">
+                <img id="live-camera-stream" class="video-bg-img" src="/video_feed" alt="Live YOLO Surveillance Feed" />
+                
+                <div class="night-chip">
+                  <i data-lucide="moon" style="width: 12px; height: 12px;"></i>
+                  <span>Night Mode</span>
+                  <span style="opacity: 0.6;">|</span>
+                  <span id="video-clock">LIVE FEED</span>
+                </div>
+              </div>
+
+              <!-- Controls & Source Switcher -->
+              <div class="video-bottom-controls" style="margin-top: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; color: #1e293b;">
+                  <span style="color: #ef4444; display: flex; align-items: center; gap: 4px;">● LIVE 30 FPS</span>
+                  <span style="color: #64748b;">(YOLOv8 + ByteTrack)</span>
+                </div>
+                
+                <!-- Video Controls & Upload Actions -->
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <!-- Upload Video Button -->
+                  <label for="video-upload-input" style="background: #111722; color: white; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="upload" style="width: 12px; height: 12px;"></i>
+                    Upload Video
+                  </label>
+                  <input type="file" id="video-upload-input" accept="video/mp4,video/avi,video/mov" style="display: none;" onchange="uploadSelectedVideo(this)" />
+
+                  <!-- Draw Danger Zone Polygon Geofence Button -->
+                  <button onclick="openGeofenceModal()" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
+                    <i data-lucide="shield-alert" style="width: 12px; height: 12px;"></i>
+                    Draw Danger Zone
+                  </button>
+
+                  <!-- Webcam Toggle Button -->
+                  <button onclick="toggleSource('webcam')" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                    <i data-lucide="video" style="width: 12px; height: 12px;"></i>
+                    Use Webcam
+                  </button>
+
+                  <!-- Reset to Default Wildlife Feed -->
+                  <button onclick="toggleSource('sample')" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                    Reset Feed
+                  </button>
+
+                  <i data-lucide="volume-2" style="width: 16px; height: 16px; cursor: pointer; color: #ef4444;" onclick="playSirenSound()" title="Test Physical Siren"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- RECENT SIGHTINGS (DARK CARD) -->
+            <div class="card card-dark">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <i data-lucide="database" style="width: 16px; height: 16px; color: #94a3b8;"></i>
+                  <div class="card-title">Recent Verified Sightings (Database)</div>
+                </div>
+                <a href="javascript:void(0)" onclick="switchTab('sightings')" style="font-size: 11px; color: #38bdf8; text-decoration: none;">View All Logs →</a>
+              </div>
+
+              <table class="sightings-table">
+                <thead>
+                  <tr>
+                    <th>Evidence</th>
+                    <th>Timestamp</th>
+                    <th>Animal</th>
+                    <th>Camera</th>
+                    <th>Location / Zone</th>
+                    <th>Risk Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for inc in incidents %}
+                  <tr>
+                    <td>
+                      <img src="{{ inc.snapshot_path if inc.snapshot_path else '/static/tiger_detected.jpg' }}" onerror="this.src='/static/tiger_detected.jpg'" class="sighting-thumb" />
+                    </td>
+                    <td style="color: #94a3b8;">{{ inc.timestamp }}</td>
+                    <td><b>🐾 {{ inc.species }} ({{ (inc.confidence * 100)|round(1) }}%)</b></td>
+                    <td style="color: #94a3b8;">{{ inc.camera_id }}</td>
+                    <td>{{ inc.camera_name }}</td>
+                    <td>
+                      {% if inc.threat_level == 'CRITICAL' or inc.threat_level == 'HIGH' %}
+                      <span class="badge-pill pill-high">{{ inc.threat_level }}</span>
+                      {% elif inc.threat_level == 'MEDIUM' %}
+                      <span class="badge-pill pill-medium">{{ inc.threat_level }}</span>
+                      {% else %}
+                      <span class="badge-pill pill-low">{{ inc.threat_level }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="column">
+
+            <!-- RISK OVERVIEW -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <i data-lucide="bar-chart-2" style="width: 16px; height: 16px; color: #1e293b;"></i>
+                  <div class="card-title">Risk Overview</div>
+                </div>
+                <div class="header-pill" style="padding: 4px 10px; font-size: 11px;">
+                  <span>Database Summary</span>
+                </div>
+              </div>
+
+              <div class="risk-stat-row">
+                <div class="stat-number">{{ total }}</div>
+                <div class="stat-label">Active Verified Sightings</div>
+                <div class="stat-badge-green">● Live SQLite</div>
+              </div>
+
+              <div class="chart-container">
+                <canvas id="riskChart"></canvas>
+              </div>
+
+              <!-- 3 Metric Boxes -->
+              <div class="risk-cards-grid">
+                <div class="risk-metric-box">
+                  <div class="box-icon box-icon-red">⚠️</div>
+                  <div class="box-data">
+                    <div class="num">{{ high_risk }}</div>
+                    <div class="sub">High Risk</div>
+                  </div>
+                </div>
+                <div class="risk-metric-box">
+                  <div class="box-icon box-icon-yellow">!</div>
+                  <div class="box-data">
+                    <div class="num">{{ medium_risk }}</div>
+                    <div class="sub">Medium Risk</div>
+                  </div>
+                </div>
+                <div class="risk-metric-box">
+                  <div class="box-icon box-icon-green">✓</div>
+                  <div class="box-data">
+                    <div class="num">{{ low_risk }}</div>
+                    <div class="sub">Low Risk</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CAMERA SENSORS -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <i data-lucide="video" style="width: 16px; height: 16px; color: #1e293b;"></i>
+                  <div class="card-title">Camera Sensors</div>
+                </div>
+                <a href="javascript:void(0)" onclick="switchTab('live-monitor')" style="font-size: 11px; color: #3b82f6; text-decoration: none;">Feeds →</a>
+              </div>
+
+              <div class="camera-list">
+                <div class="camera-row" onclick="switchTab('live-monitor')">
+                  <div class="cam-left">
+                    <img src="/static/tiger_detected.jpg" class="cam-thumb" />
+                    <div class="cam-info">
+                      <div class="cam-id">CAM_01</div>
+                      <div class="cam-name">Village Boundary (Sector 4)</div>
+                    </div>
+                  </div>
+                  <div class="cam-right">
+                    <div class="status-badge status-online">Live</div>
+                    <div class="cam-coords">📍 26.0173° N, 92.9376° E</div>
+                  </div>
+                </div>
+
+                <div class="camera-row">
+                  <div class="cam-left">
+                    <img src="/static/elephant.jpg" class="cam-thumb" />
+                    <div class="cam-info">
+                      <div class="cam-id">CAM_02</div>
+                      <div class="cam-name">Forest Corridor (Sector 12)</div>
+                    </div>
+                  </div>
+                  <div class="cam-right">
+                    <div class="status-badge status-offline">Offline</div>
+                    <div class="cam-coords">📍 26.0450° N, 92.9810° E</div>
+                  </div>
+                </div>
+
+                <div class="camera-row">
+                  <div class="cam-left">
+                    <img src="/static/tiger.jpg" class="cam-thumb" />
+                    <div class="cam-info">
+                      <div class="cam-id">CAM_03</div>
+                      <div class="cam-name">Waterhole Zone (Sector 7)</div>
+                    </div>
+                  </div>
+                  <div class="cam-right">
+                    <div class="status-badge status-online">Live</div>
+                    <div class="cam-coords">📍 25.9921° N, 92.8943° E</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI RANGER CHAT -->
+            <div class="card ai-chat-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <i data-lucide="bot" style="width: 16px; height: 16px; color: #1e293b;"></i>
+                  <div class="card-title">AI Ranger</div>
+                  <div class="gemini-pill">✦ Gemini 3.8 Flash</div>
+                </div>
+                <div class="card-meta" style="cursor: pointer;" onclick="clearChat()">
+                  <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
+                  <span>Clear</span>
+                </div>
+              </div>
+
+              <div class="chat-messages" id="chat-messages">
+                <div class="msg-bot-wrap">
+                  <div class="bot-sparkle">✦</div>
+                  <div class="msg-bot">
+                    <b>WildGuard AI Ranger Online.</b> Connected to Gemini 3.8 Flash. Ask me any questions regarding verified sightings, intruder patterns, or safety directives.
+                  </div>
+                </div>
+              </div>
+
+              <div class="chat-input-bar">
+                <input type="text" id="chat-input" placeholder="Ask about sightings, patterns, risk analysis..." onkeypress="handleKeyPress(event)" />
+                <button class="chat-send-btn" onclick="sendChat()">
+                  <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= 2. LIVE MONITOR VIEW ================= -->
+      <section id="view-live-monitor" class="view-section">
+        <div class="full-view-card">
+          <div class="section-headline">📹 Live Surveillance Stream & Video Ingestion</div>
+          <div class="section-subtitle">Real-time object detection and tracking pipeline running on simulated camera traps.</div>
+          
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <div>
+              <div style="background: #000; border-radius: 16px; overflow: hidden; position: relative; height: 450px; display: flex; align-items: center; justify-content: center;">
+                <img src="/video_feed" style="width: 100%; height: 100%; object-fit: contain;" alt="Live Surveillance Pipeline" />
+                <div style="position: absolute; top: 14px; left: 14px; background: rgba(220, 38, 38, 0.85); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: white;"></span>
+                  LIVE STREAM FEED
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; margin-top: 14px;">
+                <button onclick="alert('Camera frame captured to output/evidence/')" style="background: #111722; color: white; padding: 10px 18px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer;">
+                  📸 Save Snapshot
+                </button>
+                <button onclick="playSirenSound()" style="background: #ef4444; color: white; padding: 10px 18px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                  <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+                  🚨 Sound Emergency Siren
+                </button>
+              </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px;">
+              <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 12px;">Active Stream Parameters</h3>
+              <p style="font-size: 12px; margin-bottom: 8px;"><b>Selected Camera:</b> CAM_01 (Village Boundary)</p>
+              <p style="font-size: 12px; margin-bottom: 8px;"><b>Model Backbone:</b> YOLOv8 Multi-Class (10 Wildlife Species)</p>
+              <p style="font-size: 12px; margin-bottom: 8px;"><b>Tracking Algorithm:</b> ByteTrack (Kalman Filter)</p>
+              <p style="font-size: 12px; margin-bottom: 8px;"><b>Stream FPS:</b> 30.0 Frames/sec</p>
+              <p style="font-size: 12px; margin-bottom: 8px;"><b>Proximity to Village:</b> 80 meters (High Conflict Risk)</p>
+              <hr style="margin: 16px 0; border: none; border-top: 1px solid #e2e8f0;" />
+              <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 8px; color: #ef4444;">Active Dispatch Status</h3>
+              <p style="font-size: 12px; color: #475569;">Siren Deterrent: <b style="color: #ef4444;">ARMED</b></p>
+              <p style="font-size: 12px; color: #475569;">Telegram Bot: <b style="color: #10b981;">CONNECTED</b></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 3. ALERTS VIEW ================= -->
+      <section id="view-alerts" class="view-section">
+        <div class="full-view-card">
+          <div class="section-headline">🚨 Emergency Alerts & Tactical Dispatches</div>
+          <div class="section-subtitle">Real incidents that triggered physical sirens and villager safety alerts.</div>
+
+          {% for inc in incidents %}
+            {% if inc.threat_level == 'CRITICAL' or inc.threat_level == 'HIGH' %}
+            <div class="alert-card-item">
+              <div>
+                <div style="font-size: 14px; font-weight: 800; color: #991b1b; display: flex; align-items: center; gap: 8px;">
+                  <span>⚠️ [{{ inc.threat_level }}] {{ inc.species }} DETECTED</span>
+                  <span style="font-size: 11px; background: #fee2e2; padding: 2px 8px; border-radius: 6px;">{{ inc.timestamp }}</span>
+                </div>
+                <div style="font-size: 12px; color: #4b5563; margin-top: 6px;">
+                  <b>Location:</b> {{ inc.camera_name }} ({{ inc.zone }}) | <b>Confidence:</b> {{ (inc.confidence * 100)|round(1) }}%
+                </div>
+                <div style="font-size: 12px; color: #1e293b; margin-top: 8px;">
+                  <b>Ranger Orders:</b> {{ inc.ranger_instructions }}
+                </div>
+                <div style="font-size: 12px; color: #991b1b; margin-top: 4px;">
+                  <b>Public Broadcast:</b> {{ inc.community_broadcast }}
+                </div>
+              </div>
+              <div>
+                <img src="/static/tiger_detected.jpg" style="width: 100px; height: 70px; border-radius: 10px; object-fit: cover;" />
+              </div>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- ================= 4. SIGHTINGS LOG VIEW ================= -->
+      <section id="view-sightings" class="view-section">
+        <div class="full-view-card">
+          <div class="section-headline">📑 Complete Wildlife Sightings Database</div>
+          <div class="section-subtitle">Official forensics log stored permanently in SQLite (<code>data/wildguard.db</code>).</div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #f1f5f9; text-align: left;">
+                <th style="padding: 10px;">ID</th>
+                <th style="padding: 10px;">Species</th>
+                <th style="padding: 10px;">Camera / Location</th>
+                <th style="padding: 10px;">Confidence</th>
+                <th style="padding: 10px;">Duration</th>
+                <th style="padding: 10px;">Threat</th>
+                <th style="padding: 10px;">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for inc in incidents %}
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 12px 10px; font-weight: 700;">{{ inc.incident_id }}</td>
+                <td style="padding: 12px 10px;"><b>{{ inc.species }}</b></td>
+                <td style="padding: 12px 10px;">{{ inc.camera_name }}</td>
+                <td style="padding: 12px 10px;">{{ (inc.confidence * 100)|round(1) }}%</td>
+                <td style="padding: 12px 10px;">{{ inc.duration_seconds }}s</td>
+                <td style="padding: 12px 10px;">
+                  <span style="font-weight: 800; color: {% if inc.threat_level == 'CRITICAL' %}#ef4444{% else %}#10b981{% endif %};">
+                    {{ inc.threat_level }}
+                  </span>
+                </td>
+                <td style="padding: 12px 10px; color: #64748b;">{{ inc.timestamp }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= 5. AI RANGER DEDICATED VIEW ================= -->
+      <section id="view-ai-ranger" class="view-section">
+        <div class="full-view-card" style="display: flex; flex-direction: column;">
+          <div class="section-headline">💬 AI Ranger Interactive Intelligence Center</div>
+          <div class="section-subtitle">Chat directly with Google Gemini 3.8 Flash to query historical evidence, verify security logs, and generate dispatch advisories.</div>
+
+          <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; overflow-y: auto; overflow-x: hidden; margin-bottom: 16px; min-width: 0;" id="full-chat-messages">
+            <div class="msg-bot-wrap" style="margin-bottom: 14px;">
+              <div class="bot-sparkle">✦</div>
+              <div class="msg-bot">
+                <b>Welcome to the Dedicated AI Ranger Terminal.</b><br>
+                Powered by Gemini 3.8 Flash with direct access to <b>Qdrant Vector Database</b>.<br><br>
+                <b>Try asking:</b><br>
+                • <i>"Give me a complete threat summary for the latest tiger sighting."</i><br>
+                • <i>"What precautions must the villagers take tonight?"</i><br>
+                • <i>"Are there any dangerous animals detected near Sector 4?"</i>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-bar" style="padding: 8px 12px;">
+            <input type="text" id="full-chat-input" placeholder="Type your query for AI Ranger..." onkeypress="handleFullKeyPress(event)" style="font-size: 13px;" />
+            <button class="chat-send-btn" style="width: 36px; height: 36px;" onclick="sendFullChat()">
+              <i data-lucide="send" style="width: 16px; height: 16px;"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 6. SETTINGS VIEW ================= -->
+      <section id="view-settings" class="view-section">
+        <div class="full-view-card">
+          <div class="section-headline">⚙️ System Configuration & Confidence Thresholds</div>
+          <div class="section-subtitle">Adjust detection sensitivity, alarm triggers, and camera integration.</div>
+
+          <div class="form-group">
+            <label>Computer Vision Model Backbone</label>
+            <input type="text" class="form-control" value="YOLOv8 Multi-Class (models/wildlife_multi_yolov8.pt)" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>LLM Engine Provider</label>
+            <input type="text" class="form-control" value="Google Gemini 3.8 Flash (Active Key in .env)" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Detection Confidence Threshold (Minimum)</label>
+            <input type="number" class="form-control" value="0.50" step="0.05" />
+            <small style="color: #64748b;">Detections below 50% are discarded as noise.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Emergency Siren Alarm Threshold</label>
+            <input type="number" class="form-control" value="0.65" step="0.05" />
+            <small style="color: #64748b;">Must reach 65% across 8 consecutive frames before triggering siren.</small>
+          </div>
+
+          <button onclick="alert('Settings saved successfully!');" style="background: #111722; color: white; padding: 10px 24px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px;">
+            Save Configuration
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // TAB SWITCHING FUNCTIONALITY FOR SIDEBAR
+    function switchTab(tabName) {
+      // 1. Update Sidebar Active State
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => item.classList.remove('active'));
+
+      // Find matching item
+      const map = {
+        'dashboard': 0,
+        'live-monitor': 1,
+        'alerts': 2,
+        'sightings': 3,
+        'ai-ranger': 4,
+        'settings': 5
+      };
+      if (navItems[map[tabName]]) {
+        navItems[map[tabName]].classList.add('active');
+      }
+
+      // 2. Hide all view sections
+      const sections = document.querySelectorAll('.view-section');
+      sections.forEach(sec => sec.classList.remove('active'));
+
+      // 3. Show target section
+      const target = document.getElementById('view-' + tabName);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      // Refresh icons in case new elements rendered
+      lucide.createIcons();
+    }
+
+    // Active Camera State & Coordinates Dictionary
+    const CAMERA_METADATA = {
+      'CAM_01': { name: 'North Village Perimeter Fence', zone: 'Sector 4 - Buffer Boundary', gps: '26.0173° N, 92.9376° E' },
+      'CAM_02': { name: 'Deep Forest Corridor Waterhole', zone: 'Sector 12 - Core Reserve', gps: '26.0450° N, 92.9810° E' },
+      'CAM_03': { name: 'East Highway Crossing Culvert', zone: 'Sector 7 - Road Corridor', gps: '25.9921° N, 92.8943° E' }
+    };
+
+    let selectedCameraId = 'CAM_01';
+
+    async function changeActiveCamera(camId) {
+      selectedCameraId = camId;
+      const meta = CAMERA_METADATA[camId] || CAMERA_METADATA['CAM_01'];
+
+      // Update Header Text & GPS
+      const zoneSpan = document.getElementById('header-cam-zone');
+      const gpsSpan = document.getElementById('header-cam-gps');
+      if (zoneSpan) zoneSpan.textContent = meta.zone;
+      if (gpsSpan) gpsSpan.textContent = meta.gps;
+
+      // Notify backend of camera switch
+      const formData = new FormData();
+      formData.append('camera_id', camId);
+      formData.append('source_type', 'sample');
+
+      try {
+        await fetch('/api/switch_source', { method: 'POST', body: formData });
+        const streamImg = document.getElementById('live-camera-stream');
+        if (streamImg) streamImg.src = '/video_feed?t=' + new Date().getTime();
+      } catch (e) {
+        console.error('Camera switch error:', e);
+      }
+    }
+
+    // Video Upload Handler (Uses the currently selected camera location!)
+    async function uploadSelectedVideo(input) {
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('camera_id', selectedCameraId);
+
+      const streamImg = document.getElementById('live-camera-stream');
+      streamImg.style.opacity = '0.5';
+
+      try {
+        const res = await fetch('/api/upload_video', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        // Reset stream connection cleanly
+        streamImg.src = '';
+        setTimeout(() => {
+          streamImg.src = '/video_feed?t=' + Date.now();
+        }, 150);
+      } catch (err) {
+        alert('Failed to upload video: ' + err);
+      } finally {
+        streamImg.style.opacity = '1.0';
+        input.value = '';
+      }
+    }
+
+    // Toggle Source (Webcam vs Default Video)
+    async function toggleSource(type) {
+      const streamImg = document.getElementById('live-camera-stream');
+      streamImg.style.opacity = '0.5';
+
+      const formData = new FormData();
+      formData.append('source_type', type);
+      formData.append('camera_id', 'CAM_01');
+
+      try {
+        const res = await fetch('/api/switch_source', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        // Refresh video stream cleanly
+        streamImg.src = '';
+        setTimeout(() => {
+          streamImg.src = '/video_feed?t=' + Date.now();
+        }, 150);
+      } catch (err) {
+        alert('Failed to switch source: ' + err);
+      } finally {
+        streamImg.style.opacity = '1.0';
+      }
+    }
+
+    // Acoustic Siren Sound Generator (Web Audio API)
+    function playSirenSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+
+        // Rising and falling emergency siren wave pattern (650Hz <-> 1300Hz)
+        osc.frequency.linearRampToValueAtTime(1350, audioCtx.currentTime + 0.6);
+        osc.frequency.linearRampToValueAtTime(650, audioCtx.currentTime + 1.2);
+        osc.frequency.linearRampToValueAtTime(1350, audioCtx.currentTime + 1.8);
+        osc.frequency.linearRampToValueAtTime(650, audioCtx.currentTime + 2.4);
+
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.5);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 2.5);
+      } catch (e) {
+        console.error('AudioContext error:', e);
+      }
+    }
+
+    // Automatic Real-Time Alert Poller & Audio Siren Trigger
+    let lastHandledIncidentId = null;
+
+    async function pollLiveAlerts() {
+      try {
+        const res = await fetch('/api/latest_alert');
+        const data = await res.json();
+        
+        // Check active streamer danger zone alert (immediate sub-second trigger)
+        if (data.active_streamer_alert && data.active_streamer_alert.siren_triggered) {
+          if (!window.lastStreamerAlertTime || (Date.now() - window.lastStreamerAlertTime > 4000)) {
+            window.lastStreamerAlertTime = Date.now();
+            console.log('🚨 Active Danger Zone Intrusion Siren Triggered!');
+            playSirenSound();
+          }
+        }
+
+        if (data.latest && data.latest.incident_id !== lastHandledIncidentId) {
+          lastHandledIncidentId = data.latest.incident_id;
+          
+          // 1. Update Metrics counters
+          const countNum = document.querySelector('.risk-stat-row .stat-number');
+          if (countNum) countNum.textContent = data.total;
+
+          const highBox = document.querySelector('.box-icon-red + .box-data .num');
+          if (highBox) highBox.textContent = data.high_risk;
+
+          const alertBadge = document.getElementById('sidebar-alert-badge');
+          if (alertBadge) alertBadge.textContent = data.high_risk;
+
+          // 2. Play acoustic alarm sound if CRITICAL or HIGH threat or siren triggered!
+          if (data.latest.threat_level === 'CRITICAL' || data.latest.threat_level === 'HIGH' || data.latest.siren_triggered) {
+            console.log('🚨 Sounding Acoustic Deterrent Siren for:', data.latest.species);
+            playSirenSound();
+          }
+
+          // 3. Prepend to Sightings Table dynamically using REAL snapshot image!
+          const tbody = document.querySelector('.sightings-table tbody');
+          if (tbody) {
+            const tr = document.createElement('tr');
+            const realImgSrc = data.latest.snapshot_path || '/static/tiger_detected.jpg';
+            tr.innerHTML = `
+              <td><img src="${realImgSrc}" onerror="this.src='/static/tiger_detected.jpg'" class="sighting-thumb" /></td>
+              <td style="color: #94a3b8;">${data.latest.timestamp}</td>
+              <td><b>🐾 ${data.latest.species} (${(data.latest.confidence * 100).toFixed(1)}%)</b></td>
+              <td style="color: #94a3b8;">${data.latest.camera_id}</td>
+              <td>${data.latest.camera_name}</td>
+              <td><span class="badge-pill pill-high">${data.latest.threat_level}</span></td>
+            `;
+            tbody.insertBefore(tr, tbody.firstChild);
+          }
+        }
+      } catch (err) {
+        // silent fail on network blip
+      }
+    }
+
+    // Start fast polling every 600ms for instantaneous alarm response
+    setInterval(pollLiveAlerts, 600);
+
+    // Chart.js implementation for the Risk Overview line chart
+    const ctx = document.getElementById('riskChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['6 Oct', '7 Oct', '8 Oct', '9 Oct', '10 Oct', '11 Oct', '12 Oct'],
+        datasets: [
+          {
+            label: 'High Risk',
+            data: [0, 0, 0, 0, 0, 1, 1],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            borderWidth: 2,
+            tension: 0.4,
+            pointRadius: 2,
+            fill: true
+          },
+          {
+            label: 'Medium Risk',
+            data: [0, 0, 0, 0, 0, 0, 0],
+            borderColor: '#f59e0b',
+            borderWidth: 2,
+            tension: 0.4,
+            pointRadius: 2
+          },
+          {
+            label: 'Low Risk',
+            data: [0, 0, 0, 0, 0, 0, 0],
+            borderColor: '#10b981',
+            borderWidth: 2,
+            tension: 0.4,
+            pointRadius: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94a3b8' } },
+          y: { display: false, min: 0, max: 5 }
+        }
+      }
+    });
+
+    // ================= SECURE MARKDOWN RENDERING & SANITIZATION =================
+    function sanitizeBasicHtml(html) {
+      if (!html) return '';
+      return html
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+        .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+        .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+        .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/\son\w+\s*=\s*[^>\s]+/gi, '')
+        .replace(/javascript:/gi, 'blocked:');
+    }
+
+    function parseMarkdownFallback(rawText) {
+      if (!rawText) return '';
+
+      // 1. Entity-escape everything first (guaranteed zero XSS)
+      let safe = rawText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+      // 2. Extract and preserve code blocks
+      const codeBlocks = [];
+      safe = safe.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+        const idx = codeBlocks.length;
+        codeBlocks.push(`<pre><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`);
+        return `@@@CB_${idx}@@@`;
+      });
+
+      // 3. Extract and preserve inline code
+      const inlineCodes = [];
+      safe = safe.replace(/`([^`]+)`/g, (match, code) => {
+        const idx = inlineCodes.length;
+        inlineCodes.push(`<code>${code}</code>`);
+        return `@@@IC_${idx}@@@`;
+      });
+
+      // 4. Headings (###, ##, #)
+      safe = safe.replace(/^###\s+(.*$)/gim, '<h4>$1</h4>');
+      safe = safe.replace(/^##\s+(.*$)/gim, '<h3>$1</h3>');
+      safe = safe.replace(/^#\s+(.*$)/gim, '<h3>$1</h3>');
+
+      // 5. Blockquotes (> ...)
+      safe = safe.replace(/^\>\s+(.*$)/gim, '<blockquote>$1</blockquote>');
+
+      // 6. Bold & Italics
+      safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      safe = safe.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+      safe = safe.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      safe = safe.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+      // 7. Parse lists (unordered and ordered)
+      const lines = safe.split('\n');
+      const processed = [];
+      let inUl = false;
+      let inOl = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const ulMatch = line.match(/^[-*•]\s+(.*)$/);
+        const olMatch = line.match(/^\d+\.\s+(.*)$/);
+
+        if (ulMatch) {
+          if (inOl) { processed.push('</ol>'); inOl = false; }
+          if (!inUl) { processed.push('<ul>'); inUl = true; }
+          processed.push(`<li>${ulMatch[1]}</li>`);
+        } else if (olMatch) {
+          if (inUl) { processed.push('</ul>'); inUl = false; }
+          if (!inOl) { processed.push('<ol>'); inOl = true; }
+          processed.push(`<li>${olMatch[1]}</li>`);
+        } else {
+          if (inUl) { processed.push('</ul>'); inUl = false; }
+          if (inOl) { processed.push('</ol>'); inOl = false; }
+          if (line.length > 0) {
+            processed.push(`<p>${line}</p>`);
+          }
+        }
+      }
+      if (inUl) processed.push('</ul>');
+      if (inOl) processed.push('</ol>');
+
+      let result = processed.join('\n');
+
+      // 8. Restore code blocks & inline codes
+      inlineCodes.forEach((codeHtml, idx) => {
+        result = result.replace(`@@@IC_${idx}@@@`, codeHtml);
+      });
+      codeBlocks.forEach((blockHtml, idx) => {
+        result = result.replace(`@@@CB_${idx}@@@`, blockHtml);
+      });
+
+      return result;
+    }
+
+    function enhanceIncidentDetails(html) {
+      if (!html) return '';
+
+      // Highlight Threat Level and Risk Status
+      html = html.replace(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b(?![^<]*>)/g, (match) => {
+        const cls = match.toLowerCase();
+        return `<span class="threat-tag threat-tag-${cls}">${match}</span>`;
+      });
+
+      // Danger Zone Status
+      html = html.replace(/\bINSIDE_DANGER_ZONE\b/g, '<span class="threat-tag threat-tag-critical">INSIDE DANGER ZONE</span>');
+      html = html.replace(/\bSAFE_PERIMETER\b/g, '<span class="threat-tag threat-tag-low">SAFE PERIMETER</span>');
+
+      // Timestamps (e.g. 2026-10-14 18:49:22)
+      html = html.replace(/\b(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\b(?![^<]*>)/g, '<span class="incident-timestamp">$1</span>');
+
+      return html;
+    }
+
+    function renderMarkdown(rawText) {
+      if (!rawText) return '';
+
+      let html = '';
+      const hasMarked = typeof marked !== 'undefined' && (typeof marked.parse === 'function' || typeof marked === 'function');
+      const hasDOMPurify = typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function';
+
+      if (hasMarked) {
+        try {
+          const parseFn = typeof marked.parse === 'function' ? marked.parse.bind(marked) : marked;
+          if (typeof marked.setOptions === 'function') {
+            marked.setOptions({
+              gfm: true,
+              breaks: true,
+              mangle: false,
+              headerIds: false
+            });
+          }
+          const rawHtml = parseFn(rawText);
+          html = hasDOMPurify ? DOMPurify.sanitize(rawHtml) : sanitizeBasicHtml(rawHtml);
+        } catch (e) {
+          console.warn("Marked parser exception, using resilient fallback:", e);
+          html = parseMarkdownFallback(rawText);
+        }
+      } else {
+        html = parseMarkdownFallback(rawText);
+      }
+
+      html = enhanceIncidentDetails(html);
+      return html;
+    }
+
+    let currentChatSessionId = 'session_' + Math.random().toString(36).substring(2, 9);
+
+    // Chat functionality for mini chat
+    async function sendChat() {
+      const input = document.getElementById('chat-input');
+      const q = input.value.trim();
+      if (!q) return;
+
+      const chatContainer = document.getElementById('chat-messages');
+      const userDiv = document.createElement('div');
+      userDiv.className = 'msg-user';
+      userDiv.textContent = q;
+      chatContainer.appendChild(userDiv);
+      input.value = '';
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      const botWrap = document.createElement('div');
+      botWrap.className = 'msg-bot-wrap';
+      botWrap.innerHTML = `
+        <div class="bot-sparkle">✦</div>
+        <div class="msg-bot"><i>Gemini 3.8 Flash analyzing database...</i></div>
+      `;
+      chatContainer.appendChild(botWrap);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q, session_id: currentChatSessionId })
+        });
+        const data = await res.json();
+        botWrap.querySelector('.msg-bot').innerHTML = renderMarkdown(data.answer);
+      } catch (err) {
+        botWrap.querySelector('.msg-bot').textContent = "Unable to fetch response from Gemini.";
+      }
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function handleKeyPress(e) { if (e.key === 'Enter') sendChat(); }
+    async function clearChat() {
+      document.getElementById('chat-messages').innerHTML = '';
+      fetch('/api/chat/reset?session_id=' + currentChatSessionId, { method: 'POST' }).catch(() => {});
+      currentChatSessionId = 'session_' + Math.random().toString(36).substring(2, 9);
+    }
+
+    // Chat functionality for Dedicated AI Ranger View
+    async function sendFullChat() {
+      const input = document.getElementById('full-chat-input');
+      const q = input.value.trim();
+      if (!q) return;
+
+      const chatContainer = document.getElementById('full-chat-messages');
+      const userDiv = document.createElement('div');
+      userDiv.className = 'msg-user';
+      userDiv.style.alignSelf = 'flex-end';
+      userDiv.style.background = '#111722';
+      userDiv.style.color = '#fff';
+      userDiv.style.padding = '10px 18px';
+      userDiv.style.fontSize = '13px';
+      userDiv.textContent = q;
+      chatContainer.appendChild(userDiv);
+      input.value = '';
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      const botWrap = document.createElement('div');
+      botWrap.className = 'msg-bot-wrap';
+      botWrap.style.margin = '14px 0';
+      botWrap.innerHTML = `
+        <div class="bot-sparkle" style="width: 28px; height: 28px; font-size: 14px;">✦</div>
+        <div class="msg-bot" style="font-size: 13px; padding: 14px 18px;"><i>Gemini 3.8 Flash generating response...</i></div>
+      `;
+      chatContainer.appendChild(botWrap);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q, session_id: currentChatSessionId })
+        });
+        const data = await res.json();
+        botWrap.querySelector('.msg-bot').innerHTML = renderMarkdown(data.answer);
+      } catch (err) {
+        botWrap.querySelector('.msg-bot').textContent = "Unable to fetch response from Gemini.";
+      }
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function handleFullKeyPress(e) { if (e.key === 'Enter') sendFullChat(); }
+
+    function handleSearch(term) {
+      if (term.toLowerCase().includes('alert')) switchTab('alerts');
+      else if (term.toLowerCase().includes('camera') || term.toLowerCase().includes('cam')) switchTab('live-monitor');
+      else if (term.toLowerCase().includes('sight') || term.toLowerCase().includes('log')) switchTab('sightings');
+    }
+
+    // ================= VIRTUAL POLYGON GEOFENCE CANVAS LOGIC =================
+    let geofencePoints = [];
+    let geofenceBgImg = new Image();
+    let geofenceImgLoaded = false;
+
+    async function openGeofenceModal() {
+      const modal = document.getElementById('geofence-modal');
+      modal.style.display = 'flex';
+      
+      // Load current geofence from server
+      try {
+        const res = await fetch('/api/get_geofence');
+        const data = await res.json();
+        if (data && data.points && Array.isArray(data.points)) {
+          geofencePoints = JSON.parse(JSON.stringify(data.points));
+        }
+      } catch (e) {
+        console.error('Error fetching geofence:', e);
+      }
+
+      // Load first frame of active video
+      geofenceImgLoaded = false;
+      geofenceBgImg = new Image();
+      geofenceBgImg.crossOrigin = 'anonymous';
+      geofenceBgImg.src = '/api/first_frame?t=' + Date.now();
+      geofenceBgImg.onload = function() {
+        geofenceImgLoaded = true;
+        renderGeofenceCanvas();
+      };
+      geofenceBgImg.onerror = function() {
+        geofenceImgLoaded = false;
+        renderGeofenceCanvas();
+      };
+
+      updatePointCount();
+    }
+
+    function closeGeofenceModal() {
+      document.getElementById('geofence-modal').style.display = 'none';
+    }
+
+    function clearGeofencePoints() {
+      geofencePoints = [];
+      updatePointCount();
+      renderGeofenceCanvas();
+    }
+
+    async function resetGeofenceDefault() {
+      try {
+        const res = await fetch('/api/reset_geofence', { method: 'POST' });
+        const data = await res.json();
+        if (data && data.points) {
+          geofencePoints = data.points;
+          updatePointCount();
+          renderGeofenceCanvas();
+          alert('Reverted to default boundary corridor.');
+          const streamImg = document.getElementById('live-camera-stream');
+          if (streamImg) streamImg.src = '/video_feed?t=' + Date.now();
+        }
+      } catch (e) {
+        alert('Failed to reset geofence: ' + e);
+      }
+    }
+
+    function updatePointCount() {
+      const badge = document.getElementById('geofence-status-pill');
+      if (badge) {
+        if (geofencePoints.length >= 3) {
+          badge.style.borderColor = '#10b981';
+          badge.innerHTML = `Points: <strong style="color: #10b981;">${geofencePoints.length}</strong> (Polygon Closed & Ready)`;
+        } else {
+          badge.style.borderColor = 'rgba(255,255,255,0.2)';
+          badge.innerHTML = `Points: <strong style="color: #f59e0b;">${geofencePoints.length}</strong> (Click at least 3 points)`;
+        }
+      }
+    }
+
+    function renderGeofenceCanvas() {
+      const canvas = document.getElementById('geofence-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (geofenceImgLoaded) {
+        ctx.drawImage(geofenceBgImg, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Loading Video First Frame...', canvas.width / 2, canvas.height / 2);
+      }
+
+      if (geofencePoints.length === 0) return;
+
+      // Draw polygon filled area
+      if (geofencePoints.length >= 3) {
+        ctx.beginPath();
+        ctx.moveTo(geofencePoints[0][0], geofencePoints[0][1]);
+        for (let i = 1; i < geofencePoints.length; i++) {
+          ctx.lineTo(geofencePoints[i][0], geofencePoints[i][1]);
+        }
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.28)';
+        ctx.fill();
+      }
+
+      // Draw boundary line
+      ctx.beginPath();
+      ctx.moveTo(geofencePoints[0][0], geofencePoints[0][1]);
+      for (let i = 1; i < geofencePoints.length; i++) {
+        ctx.lineTo(geofencePoints[i][0], geofencePoints[i][1]);
+      }
+      if (geofencePoints.length >= 3) {
+        ctx.closePath();
+      }
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Draw vertex handles and numbers
+      geofencePoints.forEach((pt, idx) => {
+        ctx.beginPath();
+        ctx.arc(pt[0], pt[1], 6, 0, 2 * Math.PI);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText(idx + 1, pt[0] + 8, pt[1] - 8);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('geofence-canvas');
+      if (canvas) {
+        canvas.addEventListener('click', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          const x = Math.round((e.clientX - rect.left) * scaleX);
+          const y = Math.round((e.clientY - rect.top) * scaleY);
+          geofencePoints.push([x, y]);
+          updatePointCount();
+          renderGeofenceCanvas();
+        });
+      }
+    });
+
+    async function saveGeofencePolygon() {
+      if (geofencePoints.length < 3) {
+        alert('Please click at least 3 points on the frame to form a closed danger zone polygon.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/set_geofence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ points: geofencePoints })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          closeGeofenceModal();
+          alert('Virtual Polygon Geofence saved! Dangerous animals will trigger alarms only inside this zone.');
+          const streamImg = document.getElementById('live-camera-stream');
+          if (streamImg) streamImg.src = '/video_feed?t=' + Date.now();
+        } else {
+          alert('Failed to save geofence: ' + data.message);
+        }
+      } catch (err) {
+        alert('Error communicating with server: ' + err);
+      }
+    }
+  </script>
+
+  <!-- GEOFENCE DRAWING MODAL -->
+  <div id="geofence-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #ffffff; width: 100%; max-width: 720px; border-radius: 20px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); position: relative; display: flex; flex-direction: column; gap: 16px;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px;">
+        <div>
+          <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span style="background: #fee2e2; color: #ef4444; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px;">📍</span>
+            Virtual Polygon Geofence (Danger Zone)
+          </h3>
+          <p style="font-size: 12px; color: #64748b; margin-top: 4px;">
+            Click points directly on the first video frame to draw your custom boundary. Animal risk evaluation and alarms will trigger <strong>only</strong> when wildlife crosses into this polygon.
+          </p>
+        </div>
+        <button onclick="closeGeofenceModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; font-weight: 700; color: #64748b;">✕</button>
+      </div>
+
+      <div style="position: relative; width: 100%; max-width: 640px; margin: 0 auto; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <canvas id="geofence-canvas" width="640" height="480" style="width: 100%; height: auto; display: block; cursor: crosshair;"></canvas>
+        <div id="geofence-status-pill" style="position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,0.2);">
+          Points: <strong style="color: #f59e0b;">0</strong> (Click at least 3 points)
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 14px;">
+        <div style="display: flex; gap: 8px;">
+          <button onclick="clearGeofencePoints()" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">
+            Clear Points
+          </button>
+          <button onclick="resetGeofenceDefault()" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">
+            Reset to Default
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button onclick="closeGeofenceModal()" style="background: #e2e8f0; color: #475569; border: none; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">
+            Cancel
+          </button>
+          <button onclick="saveGeofencePolygon()" style="background: #ef4444; color: white; border: none; padding: 8px 20px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);">
+            Apply Danger Zone
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

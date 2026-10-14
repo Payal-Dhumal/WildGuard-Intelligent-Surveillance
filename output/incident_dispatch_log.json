@@ -1,0 +1,26 @@
+[
+  {
+    "incident_metadata": {
+      "incident_id": "INC-1791739192-1",
+      "track_id": 1,
+      "species": "Tiger",
+      "category": "Apex Predator",
+      "base_threat": "CRITICAL",
+      "max_confidence": 0.918,
+      "persistence_frames": 8,
+      "duration_seconds": 1.2,
+      "camera_zone": "Sector 4 - Village North Border",
+      "timestamp": "2026-10-11 22:49:52",
+      "hour_of_day": 22,
+      "is_night": true
+    },
+    "llm_evaluation": {
+      "threat_level": "CRITICAL",
+      "threat_score": 10,
+      "trigger_siren": true,
+      "situation_summary": "Apex predator (Tiger) confirmed in Sector 4 - Village North Border with 91.8% confidence. Night-time sighting indicates active prowling near human borders.",
+      "ranger_instructions": "1. Dispatch Rapid Response Unit to Sector 4 - Village North Border.\n2. Activate perimeter spotlight array.\n3. Prepare tranquilizer and non-lethal acoustic deterrents.\n4. Establish a 500-meter safety cordon.",
+      "community_broadcast": "EMERGENCY ALERT: Confirmed Tiger sighted near Sector 4 - Village North Border. Remain inside homes immediately. Bring all domestic livestock indoors. Do not venture into boundary trails."
+    }
+  }
+]

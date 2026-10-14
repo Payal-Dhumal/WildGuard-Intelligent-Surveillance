@@ -1,0 +1,41 @@
+# Environment variables & secrets
+.env
+*.env
+.env.local
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Large model weights (>100MB exceeds GitHub single-file push limit)
+models/animals_yolov8.pt
+
+# Local Qdrant Vector DB storage files & locks
+data/qdrant_db/
+*.lock
+*.sqlite
+
+# User uploaded videos & temporary runtime evidence
+uploads/*
+!uploads/.gitkeep
+output/evidence/*
+!output/evidence/.gitkeep
+output/*.mp4
+output/*.jpg
+static/evidence/*
+!static/evidence/.gitkeep
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

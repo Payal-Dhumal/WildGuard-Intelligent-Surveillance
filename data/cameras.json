@@ -1,0 +1,26 @@
+{
+  "CAM_01": {
+    "name": "North Village Perimeter Fence",
+    "zone": "Sector 4 - Buffer Boundary",
+    "latitude": 26.0173,
+    "longitude": 92.9376,
+    "environment": "Border Fence (Human-Wildlife Conflict Zone)",
+    "proximity_to_settlement_m": 80
+  },
+  "CAM_02": {
+    "name": "Deep Forest Corridor Waterhole",
+    "zone": "Sector 12 - Core Reserve",
+    "latitude": 26.0450,
+    "longitude": 92.9810,
+    "environment": "Deep Jungle (Protected Habitat)",
+    "proximity_to_settlement_m": 3500
+  },
+  "CAM_03": {
+    "name": "East Highway Crossing Culvert",
+    "zone": "Sector 7 - Road Corridor",
+    "latitude": 25.9921,
+    "longitude": 92.8943,
+    "environment": "Highway Corridor (Road-Kill Risk)",
+    "proximity_to_settlement_m": 450
+  }
+}
